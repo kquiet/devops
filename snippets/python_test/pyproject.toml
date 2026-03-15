@@ -1,0 +1,30 @@
+[project]
+name = "python_test"
+version = "0.1.0"
+description = "A sample Python application for testing gitlab package registry"
+authors = [{name = "kimberly", email = "kimberly@kquiet.org"}]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "python_registry_test (>=0.1.0)"
+]
+
+[tool.poetry]
+requires-poetry = ">=2.0"
+package-mode = false
+
+[[tool.poetry.source]]
+name = "gitlab"
+url = "http://192.168.201.83:8088/api/v4/projects/465/packages/pypi/simple"
+priority = "explicit"
+
+[tool.poetry.dependencies]
+python_registry_test = { source = "gitlab" }
+
+[tool.poetry.requires-plugins]
+poethepoet = { version = ">=0.35,<1", extras = ["poetry_plugin"] }
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

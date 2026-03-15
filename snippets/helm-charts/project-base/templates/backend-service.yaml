@@ -1,0 +1,21 @@
+{{- if .Values.service.backend.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.namePrefix }}-{{ .Values.service.backend.nameSuffix }}
+  namespace: {{ .Values.namespace }}
+spec:
+  externalTrafficPolicy: {{ .Values.service.backend.externalTrafficPolicy }}
+  ports:
+  - port: {{ .Values.service.backend.port }}
+    protocol: {{ .Values.service.backend.protocol }}
+    targetPort: {{ .Values.deployment.backend.port }}
+    {{- if and (eq "nodeport" (.Values.service.backend.type | lower)) .Values.service.backend.nodePort }}
+    nodePort: {{ .Values.service.backend.nodePort }}
+    {{- end }}
+  selector:
+    workload: {{ .Values.namePrefix }}-{{ .Values.deployment.backend.nameSuffix }}
+    component: backend
+  sessionAffinity: {{ .Values.service.backend.sessionAffinity }}
+  type: {{ .Values.service.backend.type }}
+{{- end }}

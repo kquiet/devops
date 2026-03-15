@@ -1,0 +1,10 @@
+services:
+  coredns:
+    image: docker-group.repo.svc.internal/coredns/coredns:1.14.2
+    container_name: coredns
+    restart: unless-stopped
+    network_mode: "host"
+    volumes:
+      - ./Corefile:/Corefile
+      - ./zones:/zones
+    command: -conf /Corefile

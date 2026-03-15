@@ -1,0 +1,47 @@
+spec:
+  inputs:
+    input-1:
+      default: test
+      description: "this is a string input with default value: test"
+    input-2:
+      default: "v1.0"
+      regex: ^v\d\.\d+(\.\d+)?$
+      description: "this is a string input matching regular expression: vx.y(.z)"
+    input-3:
+      type: number
+      default: 1
+      description: "this is a number input with default value: 1"
+    input-4:
+      type: boolean
+      default: true
+      description: "this is a boolean input with default value: true"
+    input-5:
+      default: staging
+      options: ['development', 'staging', 'production']
+      description: "this is an input that must match one of the options"
+---
+workflow:
+  rules:
+    - if: $CI_COMMIT_TITLE =~ /^nocicd/
+      when: never
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - .gitlab-ci.yml
+        - index.html
+    - if: $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "schedule"
+create-pages:
+  tags:
+    - all
+  image:
+    name: docker-group.repo.svc.internal/ubuntu:jammy-utils-latest
+  script:
+    - mkdir public
+    - "echo \"<br>input-1: $[[ inputs.input-1 ]]\" >> index.html"
+    - "echo \"<br>input-2: $[[ inputs.input-2 ]]\" >> index.html"
+    - "echo \"<br>input-3: $[[ inputs.input-3 ]]\" >> index.html"
+    - "echo \"<br>input-4: $[[ inputs.input-4 ]]\" >> index.html"
+    - "echo \"<br>input-5: $[[ inputs.input-5 ]]\" >> index.html"
+    - cp ./index.html ./public/
+    - ls -al ./public
+  pages:
+    publish: public

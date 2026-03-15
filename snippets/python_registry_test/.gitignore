@@ -1,0 +1,55 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+.env
+.venv
+
+# Database files
+*.sqlite3
+*.log
+*.pot
+*.mo
+*.pyo
+*.pyd
+*.db
+
+# macOS
+.DS_Store
+
+# IDEs and editors
+.idea/
+.vscode/
+
+# Backup and swap files
+*.bak
+*.swp
+*.tmp
+
+# Coverage reports
+.coverage
+htmlcov/
+
+# MyPy and Pytest caches
+.mypy_cache/
+.pytest_cache/
+.tox/
+.cache/
+
+# Coverage and profiling
+*.cover
+*.prof
+*.spec
+
+# Miscellaneous
+*.rst~
+*.orig
+*.lock
+.poetry
+.python-version
+coverage.json

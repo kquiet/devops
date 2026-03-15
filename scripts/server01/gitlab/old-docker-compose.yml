@@ -1,0 +1,50 @@
+# when using docker compose command against this docker-compose file,
+# please make sure .env exists with following environment variables:
+# LDAP_USERNAME
+# LDAP_PASSWORD
+version: '3'
+services:
+    old-gitlab:
+        image: docker-group.repo.svc.internal/gitlab/gitlab-ce:15.2.4-ce.0
+        shm_size: '1gb'
+        container_name: old-gitlab
+        restart: always
+        environment:
+            GITLAB_OMNIBUS_CONFIG: |
+                external_url "http://192.168.201.83:8088"
+                gitlab_rails['gitlab_shell_ssh_port'] = 8089
+                gitlab_rails['lfs_enabled'] = true
+                gitlab_rails['manage_backup_path'] = true
+                gitlab_rails['backup_path'] = "/var/opt/gitlab/backups"
+                gitlab_rails['backup_keep_time'] = 1800
+                gitlab_rails['ldap_enabled'] = true
+                gitlab_rails['prevent_ldap_sign_in'] = false
+                gitlab_rails['ldap_servers'] = {
+                        'main' => {
+                                'label' => 'zoo AD',
+                                'host' =>  'ldap.oa.internal',
+                                'port' => 389,
+                                'uid' => 'sAMAccountName',
+                                'bind_dn' => '${LDAP_USERNAME}',
+                                'password' => '${LDAP_PASSWORD}',
+                                'encryption' => 'plain',
+                                'verify_certificates' => false,
+                                'active_directory' => true,
+                                'allow_username_or_email_login' => true,
+                                'base' => 'dc=oa,dc=internal',
+                                'lowercase_usernames' => true,
+                                'block_auto_created_users' => false
+                        }
+                }
+        volumes:
+            - /home/gitlab/config:/etc/gitlab
+            - /home/gitlab/logs:/var/log/gitlab
+            - /home/gitlab/data:/var/opt/gitlab
+              #ports:
+              #- "8088:8088"
+              #- "8089:22"
+        networks:
+            - devops-lan
+networks:
+    devops-lan:
+        external: true

@@ -1,0 +1,8 @@
+curl -X PUT "http://127.0.0.1:9200/doc-index-000001" -H "Content-Type: application/json" -d'
+{
+  "aliases": {
+    "doc-index-alias": {
+      "is_write_index": true
+    }
+  }
+}'

@@ -1,0 +1,23 @@
+@startuml
+box Office #LightBlue
+actor User
+participant Proxy
+end box
+box Other
+boundary TargetSite
+end box
+
+User -[#red]>X TargetSite : request
+activate TargetSite
+TargetSite -[#red]> User : response
+deactivate TargetSite
+
+User -[#blue]> Proxy : request
+activate Proxy
+Proxy -[#blue]> TargetSite : forward
+activate TargetSite
+TargetSite -[#blue]> Proxy : response
+deactivate TargetSite
+Proxy -[#blue]> User : response
+deactivate Proxy
+@enduml

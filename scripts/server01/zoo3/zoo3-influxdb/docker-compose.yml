@@ -1,0 +1,31 @@
+services:
+  zoo3-influxdb:
+    image: docker-group.repo.svc.internal/influxdb:2.7.12
+    container_name: zoo3-influxdb
+    ports:
+      - "63302:8086"
+    volumes:
+      - /opt/docker_volumes/zoo3-influxdb/data:/var/lib/influxdb2:Z
+      - /opt/docker_volumes/zoo3-influxdb/config:/etc/influxdb2:Z
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: "4G"
+    blkio_config:
+      weight: 50
+      weight_device:
+        - path: /dev/loop51
+          weight: 50
+      device_read_bps:
+        - path: /dev/loop51
+          rate: '40mb'
+      device_write_bps:
+        - path: /dev/loop51
+          rate: '20mb'
+    networks:
+      zoo3-lan:
+networks:
+  zoo3-lan:
+    external: true

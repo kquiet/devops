@@ -1,0 +1,52 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: awx-operator
+spec:
+  project: need-to-override
+  source:
+    repoURL: https://ansible-community.github.io/awx-operator-helm/
+    chart: awx-operator
+    targetRevision: 3.2.0
+    helm:
+      valuesObject:
+        AWX:
+          enabled: true
+          name: awx
+          spec:
+            admin_password_secret: awx-admin
+            postgres_configuration_secret: awx-postgresql
+            secret_key_secret: awx-secret-key
+            service_type: ClusterIP
+            ingress_type: none
+            no_log: false
+            bundle_cacert_secret: root-ca-cert
+            control_plane_ee_image: docker-group.repo.svc.internal/ansible/awx-ee:20251121160100
+            ee_images:
+            - image: docker-group.repo.svc.internal/ansible/awx-ee:20251121160100
+              name: devops-awx-ee
+            ee_extra_env: |
+              - name: HTTP_PROXY
+                value: http://172.17.0.1:3128
+              - name: HTTPS_PROXY
+                value: http://172.17.0.1:3128
+              - name: NO_PROXY
+                value: localhost,127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,::1,.cluster.local,.svc.internal
+            task_extra_env: |
+              - name: HTTP_PROXY
+                value: http://172.17.0.1:3128
+              - name: HTTPS_PROXY
+                value: http://172.17.0.1:3128
+              - name: NO_PROXY
+                value: localhost,127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,::1,.cluster.local,.svc.internal
+  destination:
+    server: need-to-override
+    namespace: need-to-override
+  syncPolicy:
+    automated:
+      enabled: true
+    syncOptions:
+      - ApplyOutOfSyncOnly=true
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true

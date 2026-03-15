@@ -1,0 +1,21 @@
+services:
+  core:
+    image: docker-group.repo.svc.internal/yuzutech/kroki:0.30.1
+    environment:
+      - KROKI_SAFE_MODE=secure
+      - KROKI_MERMAID_HOST=mermaid
+    ports:
+      - "8191:8000"
+    restart: unless-stopped
+    networks:
+      - devops-lan
+  mermaid:
+    image: docker-group.repo.svc.internal/yuzutech/kroki-mermaid:0.30.1
+    environment:
+      - KROKI_MAX_BODY_SIZE=5mb
+    restart: unless-stopped
+    networks:
+      - devops-lan
+networks:
+  devops-lan:
+    external: true

@@ -1,0 +1,3 @@
+IMAGE_FILE="/opt/docker_volumes/zoo3-postgresql.img"
+MOUNT_POINT="/opt/docker_volumes/zoo3-postgresql"
+LOOP_DEVICE="/dev/loop52"

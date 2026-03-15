@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - app-argocd-resources.yaml
+  - app-k8s-cluster-resources.yaml
+  - app-adminer-resources.yaml
+  - app-longhorn.yaml
+  - app-vault-resources.yaml
+  - app-cert-manager-resources.yaml
+  - app-gitlab-resources.yaml
+  - app-postgresql-resources.yaml
+  - app-awx-resources.yaml

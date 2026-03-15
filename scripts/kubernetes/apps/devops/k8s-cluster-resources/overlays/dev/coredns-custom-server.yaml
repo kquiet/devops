@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+data:
+  custom.server: |
+    svc.internal:53 oa.internal:53 ldap.oa.internal:53 {
+      forward . 192.168.201.83
+    }

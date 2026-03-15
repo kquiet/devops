@@ -1,0 +1,15 @@
+.:53 {
+    bind 192.168.201.83
+		# Forward all non-local traffic to company DNS
+    forward . 192.168.2.36 192.168.3.36 192.168.200.36
+    log
+    errors
+}
+
+# Authoritative zone for .dvp
+svc.internal:53 {
+    bind 192.168.201.83
+    file /zones/svc.internal.db
+    log
+    errors
+}

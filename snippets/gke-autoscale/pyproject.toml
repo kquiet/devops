@@ -1,0 +1,39 @@
+[tool.poetry]
+name = "autoscale"
+version = "0.1.0"
+description = ""
+authors = []
+readme = "README.md"
+package-mode = false
+
+# [[tool.poetry.source]]
+# name = "pypi-group"
+# url = "http://192.168.23.123:8081/repository/pypi-group/simple"
+# priority = "primary"
+
+[tool.poetry.dependencies]
+python = "~=3.11"
+fastapi = "~=0.115.8"
+prometheus-client = "~=0.21.1"
+uvicorn = "~=0.34.0"
+python-dotenv = "~=1.0.1"
+
+[tool.poetry.group.dev.dependencies]
+poethepoet = "~=0.32.2"
+
+[tool.poe.tasks.install-sync]
+interpreter = ["bash", "powershell"]
+shell = """
+poetry lock --no-update
+poetry install --sync --only main,dev
+"""
+
+[tool.poe.tasks.generate-requirements]
+interpreter = ["bash", "powershell"]
+shell = """
+poetry export --output requirements.txt --without-hashes --without-urls
+"""
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

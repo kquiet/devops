@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: longhorn
+spec:
+  project: need-to-override
+  source:
+    repoURL: https://charts.longhorn.io/
+    chart: longhorn
+    targetRevision: v1.9.1
+    helm:
+      valuesObject:
+        preUpgradeChecker:
+          jobEnabled: false
+        longhornUI:
+          replicas: 1
+        persistence:
+          defaultClassReplicaCount: 2
+          volumeBindingMode: WaitForFirstConsumer
+        defaultSettings:
+          defaultReplicaCount: 2
+          allowCollectingLonghornUsageMetrics: false
+  destination:
+    server: need-to-override
+    namespace: longhorn-system
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true

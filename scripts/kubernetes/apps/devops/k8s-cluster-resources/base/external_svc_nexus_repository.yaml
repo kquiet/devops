@@ -1,0 +1,158 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-nexus-repository
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 8081
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: external-nexus-repository
+  labels:
+    kubernetes.io/service-name: external-nexus-repository
+addressType: IPv4
+ports:
+  - name: http
+    appProtocol: http
+    protocol: TCP
+    port: 8081
+endpoints:
+  - addresses:
+      - "192.168.23.123"
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: external-nexus-repository
+spec:
+  parentRefs:
+  - group: gateway.networking.k8s.io	
+    kind: Gateway
+    name: multi-protocol-gateway
+    sectionName: https-zoo-svc-wildcard
+  hostnames:
+  - "repo.svc.internal"
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - group: ''	
+      kind: Service
+      name: external-nexus-repository
+      port: 80
+      weight: 1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-nexus-repository-docker-group
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 8082
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: external-nexus-repository-docker-group
+  labels:
+    kubernetes.io/service-name: external-nexus-repository-docker-group
+addressType: IPv4
+ports:
+  - name: http
+    appProtocol: http
+    protocol: TCP
+    port: 8082
+endpoints:
+  - addresses:
+      - "192.168.23.123"
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: external-nexus-repository-docker-group
+spec:
+  parentRefs:
+  - group: gateway.networking.k8s.io	
+    kind: Gateway
+    name: multi-protocol-gateway
+    sectionName: https-zoo-svc-repo-wildcard
+  hostnames:
+  - "docker-group.repo.svc.internal"
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - group: ''	
+      kind: Service
+      name: external-nexus-repository-docker-group
+      port: 80
+      weight: 1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-nexus-repository-docker-internal
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 8083
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: external-nexus-repository-docker-internal
+  labels:
+    kubernetes.io/service-name: external-nexus-repository-docker-internal
+addressType: IPv4
+ports:
+  - name: http
+    appProtocol: http
+    protocol: TCP
+    port: 8083
+endpoints:
+  - addresses:
+      - "192.168.23.123"
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: external-nexus-repository-docker-internal
+spec:
+  parentRefs:
+  - group: gateway.networking.k8s.io	
+    kind: Gateway
+    name: multi-protocol-gateway
+    sectionName: https-zoo-svc-repo-wildcard
+  hostnames:
+  - "docker-internal.repo.svc.internal"
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - group: ''	
+      kind: Service
+      name: external-nexus-repository-docker-internal
+      port: 80
+      weight: 1

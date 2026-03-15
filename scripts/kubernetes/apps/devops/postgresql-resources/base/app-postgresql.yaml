@@ -1,0 +1,54 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: postgresql
+spec:
+  project: need-to-override
+  source:
+    repoURL: registry-1.docker.io/bitnamicharts
+    chart: postgresql
+    targetRevision: 16.7.27
+    helm:
+      valuesObject:
+        image:
+          repository: bitnamilegacy/postgresql
+          tag: 17.6.0-debian-12-r4
+        auth:
+          postgresPassword: "changeafterinstall"
+        primary:
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                    - server01
+          initdb:
+            scripts:
+              init_scripts.sql: |
+                CREATE ROLE awx WITH LOGIN PASSWORD 'changeafterinstall';
+                CREATE DATABASE awx WITH OWNER awx;
+          networkPolicy:
+            enabled: false
+          persistence:
+            existingClaim: "postgresql"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 1024Mi
+  destination:
+    server: need-to-override
+    namespace: devops
+  syncPolicy:
+    automated:
+      enabled: true
+    syncOptions:
+      - ApplyOutOfSyncOnly=true
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true

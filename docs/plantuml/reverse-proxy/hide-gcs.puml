@@ -1,0 +1,28 @@
+@startuml
+box Office #LightBlue
+actor User
+end box
+box Wormhole
+boundary Frontend as ReverseProxy
+participant Backend as ActualServer
+end box
+box Google #LightYellow
+boundary GoogleCloudStorage as GCS
+end box
+
+User -[#blue]> ReverseProxy : http://127.0.0.1/api/getFileUrl?path=xxx
+activate ReverseProxy
+ReverseProxy -[#blue]> ActualServer : http://w.x.y.z:8111/getGoogleFile?path=xxx
+activate ActualServer
+ActualServer -[#red]> ActualServer : decode xxx to realpath
+ActualServer -[#red]> ActualServer : verify users is authorized
+ActualServer -[#blue]> ReverseProxy : return realpath
+deactivate ActualServer
+ReverseProxy -[#red]> ReverseProxy : append realpath to https://storage.googleapis.com/
+ReverseProxy -[#red]> GCS : https://storage.googleapis.com/realpath
+activate GCS
+GCS -[#red]> ReverseProxy : file content
+deactivate GCS
+ReverseProxy -[#blue]> User : file content
+deactivate ReverseProxy
+@enduml

@@ -1,0 +1,76 @@
+---
+version: 3
+images:
+  base_image:
+    name: rockylinux/rockylinux:9.6.20250531-ubi
+dependencies:
+  python_interpreter:
+    package_system: "python3.12"
+    python_path: "/usr/bin/python3.12"
+  ansible_core:
+    package_pip: ansible-core==2.17.14
+  ansible_runner:
+    package_pip: ansible-runner
+  galaxy:
+    roles:
+    - name: geerlingguy.docker
+      version: "7.8.0"
+    collections:
+    - name: ansible.posix
+      version: "2.1.0"
+    - name: ansible.windows
+      version: "3.2.0"
+    - name: community.docker
+      version: "5.0.1"
+    - name: community.hashi_vault
+      version: "7.1.0"
+    - name: community.general
+      version: "12.0.1"
+    - name: google.cloud
+      version: "1.9.0"
+    - name: kubernetes.core
+      version: "6.2.0"
+  system:
+  - git-core [platform:rpm]
+  - python3.12-devel [platform:rpm compile]
+  - libcurl-devel [platform:rpm compile]
+  - krb5-devel [platform:rpm compile]
+  - krb5-workstation [platform:rpm]
+  - subversion [platform:rpm]
+  - git-lfs [platform:rpm]
+  - sshpass [platform:rpm]
+  - rsync [platform:rpm]
+  - epel-release [platform:rpm]
+  - unzip [platform:rpm]
+  - podman-remote [platform:rpm]
+  - cmake [platform:rpm compile]
+  - gcc [platform:rpm compile]
+  - gcc-c++ [platform:rpm compile]
+  - make [platform:rpm compile]
+  - openssl-devel [platform:rpm compile]
+  - xz [platform:rpm]
+  python:
+  - git+https://github.com/ansible/ansible-sign
+  - ncclient
+  - paramiko
+  - pykerberos
+  - pyOpenSSL
+  - pypsrp[kerberos,credssp]
+  - pywinrm[kerberos,credssp]
+  - toml
+  - pexpect>=4.5
+  - python-daemon
+  - pyyaml
+  - six
+  - receptorctl
+  - hvac
+  - kubernetes
+additional_build_steps:
+  append_base:
+    - RUN $PYCMD -m pip install -U pip
+  append_final:
+    - COPY --from=quay.io/ansible/receptor:v1.6.1 /usr/bin/receptor /usr/bin/receptor
+    - RUN mkdir -p /var/run/receptor
+    - RUN git lfs install --system
+    # SymLink `python` -> `python3.12`
+    - RUN alternatives --install /usr/bin/python python /usr/bin/python3.12 312

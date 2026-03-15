@@ -1,0 +1,46 @@
+{{- if .Values.deployment.frontend.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: {{ .Values.namePrefix }}-{{ .Values.deployment.frontend.nameSuffix }}
+  labels:
+    component: frontend
+    {{- toYaml .Values.deployment.labels | nindent 4 }}
+spec:
+  progressDeadlineSeconds: {{ .Values.deployment.frontend.progressDeadlineSeconds }}
+  replicas: {{ .Values.deployment.frontend.replicaCount }}
+  selector:
+    matchLabels:
+      workload: {{ .Values.namePrefix }}-{{ .Values.deployment.frontend.nameSuffix }}
+      component: frontend
+  strategy:
+    {{- toYaml .Values.deployment.frontend.strategy | nindent 4 }}
+  template:
+    metadata:
+      labels:
+        workload: {{ .Values.namePrefix }}-{{ .Values.deployment.frontend.nameSuffix }}
+        component: frontend
+    spec:
+      containers:
+      - image: {{ .Values.image.repository }}/{{ .Values.namespace }}/{{ .Values.image.frontend.name }}:{{ .Values.image.frontend.tag}}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        name: {{ .Values.deployment.frontend.nameSuffix }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.deployment.frontend.port }}
+          protocol: {{ .Values.deployment.frontend.protocol }}
+        env:
+        {{- with .Values.deployment.frontend.env }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        resources:
+          {{- toYaml .Values.deployment.frontend.resources | nindent 10 }}
+      dnsPolicy: {{ .Values.dnsPolicy }}
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 6 }}
+      {{- end }}
+      restartPolicy: {{ .Values.deployment.frontend.restartPolicy }}
+      terminationGracePeriodSeconds: {{ .Values.deployment.frontend.terminationGracePeriodSeconds }}
+{{- end }}

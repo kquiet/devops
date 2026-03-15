@@ -1,0 +1,13 @@
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "10",
+    "compress": "true"
+  },
+  "proxies": {
+    "http-proxy": "http://127.0.0.1:3128",
+    "https-proxy": "http://127.0.0.1:3128",
+    "no-proxy": "127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,169.254.0.0/16"
+  }
+}

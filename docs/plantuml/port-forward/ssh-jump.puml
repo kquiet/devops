@@ -1,0 +1,33 @@
+@startuml
+cloud 網路A {
+    component 電腦A2 as a2
+    component #pink 電腦A1 as a1
+    a2 --> a1
+    a2 <-- a1
+}
+
+cloud 網路C {
+    component #pink 電腦C1 as c1
+}
+
+cloud 網路B {
+    component #pink 電腦B1 as b1
+    component 電腦B2 as b2
+    b2 --> b1
+    b2 <-- b1
+}
+
+note as b1_ssh #00AAFF
+  ask C1 to open port xxxx and forward to B1's port 22
+end note
+
+note top of c1
+  internal port forward:
+  1. 80 to xxxx
+end note
+
+a1 -> c1 : ssh(80)
+c1 -> b1 : ssh forward(22)
+c1 <- b1 #line:00AAFF;text:00AAFF : ssh(22)
+b1 .. b1_ssh
+@enduml

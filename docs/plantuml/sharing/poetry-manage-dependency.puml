@@ -1,0 +1,17 @@
+@startuml
+actor engineer as user
+rectangle git {
+file pyproject.toml as project
+file poetry.lock as lock
+}
+card virtualenv [
+    virtual environment
+    ===
+    dependency1
+    dependency2
+]
+
+user -> project : manage
+project -> lock : <i><color:blue>poetry lock</color></i>
+lock -> virtualenv : <i><color:blue>poetry install</color></i>
+@enduml

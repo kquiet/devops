@@ -1,0 +1,31 @@
+workflow:
+  rules:
+    - if: $CI_COMMIT_TITLE =~ /^nocicd/
+      when: never
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - pyproject.toml
+        - python_registry_test/**/*
+
+stages:
+  - publish
+
+sync-test-publish:
+  stage: publish
+  image: docker-group.repo.svc.internal/python:3.12.10-bookworm-poetry2.1.4
+  tags:
+    - all
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - .venv
+      - .poetry
+  variables:
+    POETRY_HOME: "$CI_PROJECT_DIR/.poetry"
+    POETRY_VIRTUALENVS_IN_PROJECT: "1"
+    POETRY_HTTP_BASIC_GITLAB_USERNAME: "${CI_DEPLOY_USER}"
+    POETRY_HTTP_BASIC_GITLAB_PASSWORD: "${CI_DEPLOY_PASSWORD}"
+  script:
+    - poetry sync
+    - poetry poe test-coverage
+    - poetry poe publish

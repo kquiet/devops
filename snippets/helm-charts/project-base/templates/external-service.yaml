@@ -1,0 +1,75 @@
+{{ if .Values.service.externalMysql.enabled -}}
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: {{ .Values.namePrefix }}-{{ .Values.service.externalMysql.nameSuffix }}
+  namespace: testcicdproj
+subsets:
+  - addresses:
+      - ip: {{ .Values.service.externalMysql.host }}
+    ports:
+      - port: {{ .Values.service.externalMysql.port }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.namePrefix }}-{{ .Values.service.externalMysql.nameSuffix }}
+  namespace: testcicdproj
+spec:
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+{{- end }}
+{{ if .Values.service.externalLog.enabled -}}
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: {{ .Values.namePrefix }}-{{ .Values.service.externalLog.nameSuffix }}
+  namespace: testcicdproj
+subsets:
+  - addresses:
+      - ip: {{ .Values.service.externalLog.host }}
+    ports:
+      - port: {{ .Values.service.externalLog.port }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.namePrefix }}-{{ .Values.service.externalLog.nameSuffix }}
+  namespace: testcicdproj
+spec:
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 3100
+      targetPort: 3100
+{{- end }}
+{{ if .Values.service.externalTrace.enabled -}}
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: {{ .Values.namePrefix }}-{{ .Values.service.externalTrace.nameSuffix }}
+  namespace: testcicdproj
+subsets:
+  - addresses:
+      - ip: {{ .Values.service.externalTrace.host }}
+    ports:
+      - port: {{ .Values.service.externalTrace.port }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.namePrefix }}-{{ .Values.service.externalTrace.nameSuffix }}
+  namespace: testcicdproj
+spec:
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 4317
+      targetPort: 4317
+{{- end }}

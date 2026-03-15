@@ -1,0 +1,48 @@
+@startuml
+box #LightBlue
+actor User as u
+end box
+box Frontend
+boundary nginx as fboundary
+participant CallApiButton.vue as cab
+participant apiServices.js as asj
+collections Axios as ax
+end box
+box Backend
+boundary fastapi as bboundary
+participant app.api.beats as aab
+participant app.service.beats as asb
+participant app.dataaccess.beats as adb
+end box
+box #LightYellow
+database MariaDB as mdb
+end box
+
+u -> fboundary : <color blue>click</color>
+activate fboundary
+fboundary -> cab : <color red>click_counter_increment</color>
+cab -> asj : callApi()
+asj -> ax : get(/beats/xxx/)
+ax -> fboundary : <color blue>GET http://frontend/backend/beats/xxx/</color>
+fboundary -> bboundary : <color blue>GET http://backend/beats/xxx/</color>
+activate bboundary
+bboundary -> aab : <color red>fire_beats</color>
+aab -> asb : <color red>process_beats</color>
+asb -> asb : <color red>check_id</color>
+asb -> adb : <color red>upsert_beats</color>
+adb -> mdb : <color blue>connect</color>
+mdb -> adb
+adb -> mdb : <color blue>INSERT</color>
+mdb -> adb
+adb -> asb
+asb -> aab
+aab -> bboundary
+bboundary -> fboundary
+deactivate bboundary
+fboundary -> ax
+ax -> asj
+asj -> cab
+cab -> fboundary
+fboundary -> u
+deactivate fboundary
+@enduml

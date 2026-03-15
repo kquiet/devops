@@ -1,0 +1,33 @@
+services:
+  zoo3-postgresql:
+    image: docker-group.repo.svc.internal/postgres:17.5
+    container_name: zoo3-postgresql
+    ports:
+      - "63303:5432"
+    volumes:
+      - /opt/docker_volumes/zoo3-postgresql/data:/var/lib/postgresql/data:Z
+    environment:
+      POSTGRES_PASSWORD: "zoo3-postgresql"
+    restart: always
+    shm_size: 128mb
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "1G"
+    blkio_config:
+      weight: 50
+      weight_device:
+        - path: /dev/loop52
+          weight: 50
+      device_read_bps:
+        - path: /dev/loop52
+          rate: '40mb'
+      device_write_bps:
+        - path: /dev/loop52
+          rate: '20mb'
+    networks:
+      zoo3-lan:
+networks:
+  zoo3-lan:
+    external: true

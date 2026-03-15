@@ -1,0 +1,32 @@
+services:
+  nexus-repository:
+    image: sonatype/nexus3:3.76.1
+    container_name: nexus-repository
+    ports:
+      - "8081:8081"
+      - "8082:8082"
+      - "8083:8083"
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 16gb
+        reservations:
+          cpus: '0.1'
+          memory: 4gb
+    environment:
+      INSTALL4J_ADD_VM_PARAMS: "-Xms11G -Xmx11G -Djava.util.prefs.userRoot=/nexus-data/javaprefs"
+    restart: always
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - /opt/docker_volumes/nexus-repository/nexus-data:/nexus-data
+    networks:
+      - devops-lan
+networks:
+  devops-lan:
+    external: true

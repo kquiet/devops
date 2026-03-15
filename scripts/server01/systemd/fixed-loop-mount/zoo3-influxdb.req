@@ -1,0 +1,3 @@
+IMAGE_FILE="/opt/docker_volumes/zoo3-influxdb.img"
+MOUNT_POINT="/opt/docker_volumes/zoo3-influxdb"
+LOOP_DEVICE="/dev/loop51"

@@ -1,0 +1,16 @@
+services:
+  statping:
+    image: statping/statping:v0.90.74
+    container_name: statping
+    ports:
+      - 8080:8080
+    environment:
+      DB_CONN: sqlite
+    restart: always
+    volumes:
+      - /opt/docker_volumes/statping:/app
+    networks:
+      - devops-lan
+networks:
+  devops-lan:
+    external: true

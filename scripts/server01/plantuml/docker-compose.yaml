@@ -1,0 +1,14 @@
+services:
+  plantuml-server:
+    image: docker-group.repo.svc.internal/plantuml/plantuml-server:v1.2025.10
+    container_name: plantuml-server
+    ports:
+      - "8191:8080"
+    restart: unless-stopped
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      - devops-lan
+networks:
+  devops-lan:
+    external: true

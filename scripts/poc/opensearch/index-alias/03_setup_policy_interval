@@ -1,0 +1,6 @@
+curl -X PUT "http://127.0.0.1:9200/_cluster/settings?pretty=true" -H "Content-Type: application/json" -d'
+{
+  "persistent" : {
+    "plugins.index_state_management.job_interval" : 1
+  }
+}'

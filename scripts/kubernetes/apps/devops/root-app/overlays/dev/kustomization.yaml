@@ -1,0 +1,46 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+namespace: devops
+
+# ~1 is how JSON Pointer escapes /, so the annotation key iam.gke.io/gcp-service-account must be written as iam.gke.io~1gcp-service-account
+patches:
+  - target:
+      kind: Application
+      name: argocd-resources
+    path: application-patch.yaml
+  - target:
+      kind: Application
+      name: k8s-cluster-resources
+    path: application-patch.yaml
+  - target:
+      kind: Application
+      name: adminer-resources
+    path: application-patch.yaml
+  - target:
+      kind: Application
+      name: longhorn
+    path: helm-patch.yaml
+  - target:
+      kind: Application
+      name: vault-resources
+    path: application-patch.yaml
+  - target:
+      kind: Application
+      name: cert-manager-resources
+    path: application-patch.yaml
+  - target:
+      kind: Application
+      name: gitlab-resources
+    path: application-patch.yaml
+  - target:
+      kind: Application
+      name: postgresql-resources
+    path: application-patch.yaml
+  - target:
+      kind: Application
+      name: awx-resources
+    path: application-patch.yaml

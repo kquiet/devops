@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mariadb
+  namespace: devops
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 16Gi
+  hostPath:
+    path: /opt/k8s_volumes/mariadb
+    type: Directory
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - server01
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-path
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mariadb
+  namespace: devops
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 16Gi
+  storageClassName: local-path
+  volumeMode: Filesystem
+  volumeName: mariadb
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mariadb
+  namespace: devops
+type: Opaque
+data:
+  mariadb-root-password: Y2hhbmdlYWZ0ZXJpbnN0YWxs
+  mariadb-password: ZHVtbXlwYXNzd29yZA==

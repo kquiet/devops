@@ -1,0 +1,18 @@
+@startuml
+box Office #LightBlue
+actor User
+end box
+box Other
+boundary ReverseProxy
+participant ActualServer
+end box
+
+User -[#blue]> ReverseProxy : request
+activate ReverseProxy
+ReverseProxy -[#blue]> ActualServer : forward
+activate ActualServer
+ActualServer -[#blue]> ReverseProxy : response
+deactivate ActualServer
+ReverseProxy -[#blue]> User : response
+deactivate ReverseProxy
+@enduml

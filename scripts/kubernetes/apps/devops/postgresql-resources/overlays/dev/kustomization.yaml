@@ -1,0 +1,30 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+namespace: devops
+
+# ~1 is how JSON Pointer escapes /, so the annotation key iam.gke.io/gcp-service-account must be written as iam.gke.io~1gcp-service-account
+patches:
+- target:
+    kind: Application
+    name: postgresql
+  patch: |
+    - op: replace
+      path: /spec/project
+      value: devops
+    - op: replace
+      path: /spec/destination/server
+      value: https://192.168.201.83:6443
+    - op: add
+      path: /metadata/annotations/argocd.argoproj.io~1sync-wave
+      value: 1
+- target:
+    kind: Service
+    name: postgresql-external
+  patch: |
+    - op: add
+      path: /spec/externalIPs/0
+      value: 192.168.201.83

@@ -1,0 +1,103 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: multi-protocol-gateway
+  annotations:
+    cert-manager.io/cluster-issuer: zoo-dev-platform-wildcard-svc-issuer
+    cert-manager.io/common-name: svc.internal
+    cert-manager.io/subject-organizations: ZOO
+    cert-manager.io/subject-organizationalunits: ZOO Developer Platform
+    cert-manager.io/duration: 2160h # 90 days
+    cert-manager.io/renew-before: 360h # 15days
+    cert-manager.io/revision-history-limit: "3"
+    cert-manager.io/private-key-algorithm: RSA
+    cert-manager.io/private-key-size: "4096"
+    cert-manager.io/private-key-rotation-policy: Always
+spec:
+  gatewayClassName: cilium
+  listeners:
+  - name: http
+    protocol: HTTP
+    port: 80
+    allowedRoutes:
+      namespaces:
+        from: All
+  - name: https-zoo-svc-root
+    hostname: "svc.internal"
+    protocol: HTTPS
+    port: 443
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - group: ''
+        kind: Secret
+        name: zoo-svc-tls
+    allowedRoutes:
+      namespaces:
+        from: All
+  - name: https-zoo-svc-wildcard
+    hostname: "*.svc.internal"
+    protocol: HTTPS
+    port: 443
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - group: ''
+        kind: Secret
+        name: zoo-svc-tls
+    allowedRoutes:
+      namespaces:
+        from: All
+  - name: https-zoo-svc-repo-wildcard
+    hostname: "*.repo.svc.internal"
+    protocol: HTTPS
+    port: 443
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - group: ''
+        kind: Secret
+        name: zoo-svc-tls
+    allowedRoutes:
+      namespaces:
+        from: All
+  - name: https-zoo-svc-gitlab-pages-wildcard
+    hostname: "*.gitlab-pages.svc.internal"
+    protocol: HTTPS
+    port: 443
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - group: ''
+        kind: Secret
+        name: zoo-svc-tls
+    allowedRoutes:
+      namespaces:
+        from: All
+  - name: tcp-postgresql
+    protocol: TCP
+    port: 5432
+    allowedRoutes:
+      namespaces:
+        from: All
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: http-redirect
+spec:
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: multi-protocol-gateway
+    sectionName: http
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    filters:
+    - type: RequestRedirect
+      requestRedirect:
+        scheme: https
+        statusCode: 301

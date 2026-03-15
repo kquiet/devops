@@ -1,0 +1,3 @@
+IMAGE_FILE="/opt/docker_volumes/zoo3-mariadb.img"
+MOUNT_POINT="/opt/docker_volumes/zoo3-mariadb"
+LOOP_DEVICE="/dev/loop50"

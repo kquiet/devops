@@ -1,0 +1,309 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ubuntu-utility
+  namespace: devops
+  labels:
+    app: ubuntu-utility
+spec:
+  selector:
+    matchLabels:
+      app: ubuntu-utility
+  template:
+    metadata:
+      labels:
+        app: ubuntu-utility
+    spec:
+      containers:
+      - name: ubuntu-utility
+        image: gcr.io/wormhold-proj-id/ubuntu:jammy-utils-latest
+        command: ["bash", "-c", "while true; do sleep 1; done"]
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "10m"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autoscale-demo
+  namespace: devops
+  labels:
+    app: autoscale-demo
+spec:
+  selector:
+    matchLabels:
+      app: autoscale-demo
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: autoscale-demo
+    spec:
+      containers:
+      - name: autoscale-demo
+        image: gcr.io/wormhold-proj-id/autoscale-demo:v1
+        resources:
+          requests:
+            memory: "1024Mi"
+            cpu: "10m"
+          limits:
+            memory: "1024Mi"
+            cpu: "1000m"
+        ports:
+        - name: http
+          containerPort: 63101
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: 63101
+          initialDelaySeconds: 1
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 1
+        readinessProbe  :
+          httpGet:
+            path: /metrics
+            port: 63101
+          initialDelaySeconds: 1
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 1
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - autoscale-demo
+              topologyKey: topology.kubernetes.io/zone
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: autoscale-demo
+  namespace: devops
+spec:
+  selector:
+    app: autoscale-demo
+  ports:
+  - name: http
+    protocol: TCP
+    port: 63101
+    targetPort: 63101
+---
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: autoscale-demo
+  namespace: devops
+  labels:
+    app: autoscale-demo
+spec:
+  selector:
+    matchLabels:
+      app: autoscale-demo
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 5s
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: autoscale-demo
+  namespace: devops
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: autoscale-demo
+  minReplicas: 1
+  maxReplicas: 10
+  behavior:
+    scaleDown:
+      policies:
+      - periodSeconds: 60
+        type: Pods
+        value: 2
+      - periodSeconds: 60
+        type: Percent
+        value: 20
+      selectPolicy: Min
+      stabilizationWindowSeconds: 300
+    scaleUp:
+      policies:
+      - periodSeconds: 60
+        type: Pods
+        value: 2
+      - periodSeconds: 60
+        type: Percent
+        value: 20
+      selectPolicy: Max
+      stabilizationWindowSeconds: 0
+  metrics:
+  - type: Pods
+    pods:
+      metric:
+        name: prometheus.googleapis.com|gpu_utilization|gauge
+      target:
+        type: AverageValue
+        averageValue: 20
+  - type: Pods
+    pods:
+      metric:
+        name: prometheus.googleapis.com|active_connections|gauge
+      target:
+        type: AverageValue
+        averageValue: 40
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 60
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 70
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: autoscale-demo
+  namespace: devops
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: autoscale-demo
+---
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: autoscale-demo
+  namespace: devops
+spec:
+  targetRef:
+    apiVersion: "apps/v1"
+    kind: Deployment
+    name: autoscale-demo
+  updatePolicy:
+    updateMode: "Off"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autoscale-gpu-demo
+  namespace: devops
+spec:
+  selector:
+    matchLabels:
+      app: autoscale-gpu-demo
+  template:
+    metadata:
+      labels:
+        app: autoscale-gpu-demo
+    spec:
+      containers:
+        - name: autoscale-gpu-demo
+          image: nvidia/cuda:12.2.2-runtime-ubuntu22.04
+          command: ["bash", "-c", "while true; do sleep 1; done"]
+          resources:
+            requests:
+              memory: "1024Mi"
+              cpu: "10m"
+              nvidia.com/gpu: 1
+            limits:
+              memory: "2048Mi"
+              cpu: "100m"
+              nvidia.com/gpu: 1
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: goog-gke-node-pool-provisioning-model
+                operator: NotIn
+                values:
+                - spot
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - autoscale-demo
+            topologyKey: topology.kubernetes.io/zone
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - autoscale-gpu-demo
+              topologyKey: topology.kubernetes.io/zone
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: autoscale-gpu-demo
+  namespace: devops
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: autoscale-gpu-demo
+  minReplicas: 1
+  maxReplicas: 4
+  behavior:
+    scaleDown:
+      policies:
+      - periodSeconds: 60
+        type: Pods
+        value: 1
+      - periodSeconds: 60
+        type: Percent
+        value: 20
+      selectPolicy: Min
+      stabilizationWindowSeconds: 300
+    scaleUp:
+      policies:
+      - periodSeconds: 60
+        type: Pods
+        value: 1
+      - periodSeconds: 60
+        type: Percent
+        value: 20
+      selectPolicy: Max
+      stabilizationWindowSeconds: 0
+  metrics:
+  - type: Pods
+    pods:
+      metric:
+        name: prometheus.googleapis.com|DCGM_FI_PROF_GR_ENGINE_ACTIVE|gauge
+      target:
+        type: AverageValue
+        averageValue: 20

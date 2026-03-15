@@ -1,0 +1,6 @@
+- op: replace
+  path: /spec/project
+  value: devops
+- op: replace
+  path: /spec/destination/server
+  value: https://192.168.201.83:6443

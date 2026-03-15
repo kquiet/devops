@@ -1,0 +1,37 @@
+upgradeCompatibility: 1.16.1
+k8sServiceHost: 127.0.0.1
+k8sServicePort: 6443
+
+kubeProxyReplacement: true
+
+l2announcements:
+  enabled: true
+
+k8sClientRateLimit:
+  qps: 50
+  burst: 200
+
+operator:
+  replicas: 1
+  rollOutPods: true
+
+rollOutCiliumPods: true
+
+gatewayAPI:
+  enabled: true
+
+envoy:
+  securityContext:
+    capabilities:
+      envoy:
+        - NET_ADMIN
+        - PERFMON
+        - BPF
+      keepCapNetBindService: true
+
+hubble:
+  enabled: true
+  relay:
+    enabled: true
+  ui:
+    enabled: true

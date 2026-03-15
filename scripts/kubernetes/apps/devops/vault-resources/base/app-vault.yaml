@@ -1,0 +1,70 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vault
+spec:
+  project: need-to-override
+  source:
+    repoURL: https://helm.releases.hashicorp.com
+    chart: vault
+    targetRevision: 0.32.0
+    helm:
+      valuesObject:
+        global:
+          enabled: false
+          tlsDisable: true
+        server:
+          enabled: true
+          logLevel: "debug"
+          readinessProbe:
+            enabled: true
+            path: "/v1/sys/health?standbyok=true&sealedcode=204&uninitcode=204"
+          livenessProbe:
+            enabled: true
+            path: "/v1/sys/health?standbyok=true"
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                    - server01
+          dataStorage:
+            enabled: true
+            size: 3Gi
+            storageClass: longhorn
+            persistentVolumeClaimRetentionPolicy:
+              whenDeleted: Retain
+              whenScaled: Retain
+          auditStorage:
+            enabled: true
+            size: 2Gi
+            storageClass: longhorn
+          standalone:
+            enabled: false
+          ha:
+            enabled: true
+            raft:
+              enabled: true
+            replicas: 1
+        ui:
+          enabled: true
+  destination:
+    server: need-to-override
+    namespace: vault
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
+  ignoreDifferences:
+    - group: apps
+      kind: StatefulSet
+      name: vault
+      jsonPointers:
+        - /spec/volumeClaimTemplates/0/apiVersion
+        - /spec/volumeClaimTemplates/0/kind
+        - /spec/volumeClaimTemplates/1/apiVersion
+        - /spec/volumeClaimTemplates/1/kind

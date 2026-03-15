@@ -1,0 +1,36 @@
+image:
+  tag: 11.5.2
+
+auth:
+  database: ""
+  existingSecret: "mariadb"
+
+initdbScripts:
+  my_init_script.sql: |
+    create user 'devops'@'%' identified by 'changeafterinstall';
+    grant all privileges ON *.* to 'devops'@'%' with grant option;
+
+primary:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - server01
+  extraFlags: "--old-mode= --skip-character-set-client-handshake --character-set-server=utf8mb4 --character-set-filesystem=utf8mb4 --collation-server=utf8mb4_uca1400_ai_ci"
+  persistence:
+    existingClaim: "mariadb"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 1000m
+      memory: 1024Mi
+
+networkPolicy:
+  enabled: false
+

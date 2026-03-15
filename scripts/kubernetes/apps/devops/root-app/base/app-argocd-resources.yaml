@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-resources
+spec:
+  project: need-to-override
+  source:
+    repoURL: need-to-override
+    path: scripts/kubernetes/apps/devops/argocd-resources/overlays/dev
+    targetRevision: HEAD
+  destination:
+    server: need-to-override
+  syncPolicy:
+    automated:
+      enabled: true
+    syncOptions:
+      - ApplyOutOfSyncOnly=true
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true

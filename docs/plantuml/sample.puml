@@ -1,0 +1,17 @@
+@startuml
+cloud 網路A {
+    component 電腦A2 as a2
+    component #pink 電腦A1 as a1
+    a2 --> a1
+    a2 <-- a1
+}
+
+cloud 網路B {
+    component #pink 電腦B1 as b1
+    component 電腦B2 as b2
+    b2 --> b1
+    b2 <-- b1
+}
+
+a1 -> b1 : ssh(22)
+@enduml

@@ -1,0 +1,62 @@
+[Unit]
+# Provides a short description of the service.
+Description=ssh remote port forward
+
+# Specifies that the service should start after some services(separated by whitespace) have started.
+After=network.target
+
+# The service will only start if the file /path/to/not_to_be_run does not exist.
+#ConditionPathExists=!/path/to/not_to_be_run
+
+StartLimitBurst=2
+StartLimitIntervalSec=30
+
+[Service]
+User=devops
+RestartSec=30
+
+# Specifies working directory
+#WorkingDirectory=$workdir
+
+# Specifies an environment file to be read before starting the service. Character '-' means it is optional and the service will still start even if the file is missing.
+#EnvironmentFile=-/path/to/wormhole_environment_file
+
+# A command to run before the main ExecStart command. We can test environment(e.g.: GPU should exist) if needed.
+#ExecStartPre=/path/to/wormhole_exec_pre
+
+# The command to start the service.
+ExecStart=/home/devops/.ssh/ssh-remote-forward-entry.sh
+
+# Specifies how processes should be killed.
+# control-group: All processes in the control group (cgroup) of the service are killed. This includes the main process and any other processes that were spawned by it.
+# process: Only the main process of the service is killed. Any child processes that were forked by the main process are left running.
+# mixed: The main process is sent the SIGTERM signal, while all remaining processes in the control group are sent the SIGKILL signal. This can be useful if you want to give the main process a chance to terminate gracefully while ensuring that all other processes are immediately killed.
+# none: No processes are killed. It is up to the service itself to terminate its processes. This mode can be useful for services that manage their own shutdown process.
+KillMode=control-group
+
+# Configures whether the service shall be restarted when the service process exits, is killed, or a timeout is reached.
+# The service process may be the main service process, but it may also be one of the processes specified with ExecStartPre=,
+# ExecStartPost=, ExecStop=, ExecStopPost=, or ExecReload=. When the death of the process is a result of systemd operation
+# (e.g. service stop or restart), the service will not be restarted. Timeouts include missing the watchdog "keep-alive ping" deadline
+# and a service start, reload, and stop operation timeouts.
+# no: The service will not be restarted.
+# always: The service will be restarted regardless of whether it exited cleanly or not, got terminated abnormally by a signal, or hit a timeout.
+# on-success: The service will be restarted only when the service process exits cleanly. In this context, a clean exit means any of the following:
+# 1. exit code of 0; 2. for types other than Type=oneshot, one of the signals SIGHUP, SIGINT, SIGTERM, or SIGPIPE; 3. exit statuses and signals specified in SuccessExitStatus=.
+# on-failure: The service will be restarted when the process exits with a non-zero exit code, is terminated by a signal (including on core dump, but excluding the aforementioned four signals), when an operation (such as service reload) times out, and when the configured watchdog timeout is triggered.
+# on-abnormal: The service will be restarted when the process is terminated by a signal (including on core dump, excluding the aforementioned four signals), when an operation times out, or when the watchdog timeout is triggered.
+# on-abort: The service will be restarted only if the service process exits due to an uncaught signal not specified as a clean exit status.
+# on-watchdog: The service will be restarted only if the watchdog timeout for the service expires.
+Restart=always
+
+# Specifies the start-up type of the service. It defines how systemd should determine that the service has started successfully.
+# simple: The service is considered started immediately after the ExecStart command has been executed.
+# forking: The service is considered started when the process specified in ExecStart forks and the parent process exits. The child process continues to run as the main service process.
+# oneshot: The service is considered started when the ExecStart process exits. This is typically used for one-off tasks. This is typically used for one-off tasks.
+# notify: The service is considered started when it sends a notification signal to systemd. This requires the service to use the sd_notify protocol to inform systemd about its start-up completion.
+# dbus: The service is considered started when the specified D-Bus name is acquired.
+# idle: The service command is delayed until all jobs are dispatched. This is rarely used.
+Type=simple
+
+[Install]
+WantedBy=multi-user.target

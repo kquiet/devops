@@ -1,0 +1,15 @@
+[Unit]
+Description=Mount multiple loopback images for docker volumes
+Requires=systemd-udevd.service
+After=local-fs.target
+Before=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/bash /home/devops/git/devops/scripts/server01/systemd/fixed-loop-mount/mount-all.sh start
+ExecStop=/bin/bash /home/devops/git/devops/scripts/server01/systemd/fixed-loop-mount/mount-all.sh stop
+
+[Install]
+WantedBy=multi-user.target
+

@@ -1,0 +1,47 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gitlab-runner-all-01
+spec:
+  project: need-to-override
+  source:
+    repoURL: https://charts.gitlab.io
+    chart: gitlab-runner
+    targetRevision: 0.84.0
+    helm:
+      valuesObject:
+        image:
+          registry: docker-group.repo.svc.internal
+          image: gitlab/gitlab-runner
+          tag: alpine3.21-v18.7.0
+        replicas: 1
+        gitlabUrl: http://192.168.201.83:8088/
+        concurrent: 2
+        checkInterval: 10
+        logLevel: debug
+        rbac:
+          create: true
+        serviceAccount:
+          create: true
+        runners:
+          config: |
+            [[runners]]
+              output_limit = 10240
+              [runners.kubernetes]
+                namespace = "{{ default .Release.Namespace .Values.runners.jobNamespace }}"
+                image = "docker-group.repo.svc.internal/ubuntu:jammy-utils-latest"
+                pull_policy = ["always", "if-not-present"]
+                allowed_images = ["docker-group.repo.svc.internal/**/*:*"]
+                helper_image = "docker-group.repo.svc.internal/gitlab/gitlab-runner-helper:alpine3.21-x86_64-v18.7.0"
+          secret: gitlab-runner-all-01-token
+  destination:
+    server: need-to-override
+    namespace: need-to-override
+  syncPolicy:
+    automated:
+      enabled: true
+    syncOptions:
+      - ApplyOutOfSyncOnly=true
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true

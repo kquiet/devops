@@ -1,0 +1,31 @@
+$ORIGIN svc.internal.
+$TTL 3600
+
+; SOA Record (Start of Authority)
+@ IN SOA dns.svc.internal. admin.svc.internal. (
+				2025112001 ; serial
+				7200       ; refresh (2 hours)
+				3600       ; retry (1 hour)
+				1209600    ; expire (2 weeks)
+				600        ; minimum (10 minutes)
+				)
+
+; NS Record (The "Name Server" for this zone)
+@ IN NS dns.svc.internal.
+
+; A records
+dns IN A 192.168.201.83
+poc1 IN A 192.168.23.168
+
+; CNAME records
+kroki IN CNAME dns
+gitlab IN CNAME dns
+*.gitlab-pages IN CNAME dns
+repo IN CNAME dns
+docker-group.repo IN CNAME dns
+docker-internal.repo IN CNAME dns
+adminer IN CNAME dns
+argocd IN CNAME dns
+vault IN CNAME dns
+postgresql IN CNAME dns
+awx IN CNAME dns

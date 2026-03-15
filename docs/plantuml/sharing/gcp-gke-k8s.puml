@@ -1,0 +1,17 @@
+@startuml
+package GCP as gcp{
+   component "Compute Engine" as ce
+   component "Artifact Registry" as ar
+   package GKE as gke{
+      package "K8S Cluster" as k8s1 {
+         component "Control Plane" as cp1
+         component "Node1" as n1
+      }
+   }
+}
+actor engineer as e1
+e1 -right-> cp1 : 1.request to deploy app
+cp1 -up-> ce : 1.1.need new node
+cp1 -down-> n1 : 1.2.deploy app spec
+n1 -down-> ar : 1.3 pull images
+@enduml

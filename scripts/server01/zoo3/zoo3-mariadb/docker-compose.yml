@@ -1,0 +1,33 @@
+services:
+  zoo3-mariadb:
+    image: docker-group.repo.svc.internal/mariadb:11.6.2
+    container_name: zoo3-mariadb
+    ports:
+      - "63301:3306"
+    volumes:
+      - /opt/docker_volumes/zoo3-mariadb/data:/var/lib/mysql:Z
+      - /opt/docker_volumes/zoo3-mariadb/config:/etc/mysql/conf.d:Z
+    environment:
+      MARIADB_ROOT_PASSWORD: "zoo3-mariadb"
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "1G"
+    blkio_config:
+      weight: 50
+      weight_device:
+        - path: /dev/loop50
+          weight: 50
+      device_read_bps:
+        - path: /dev/loop50
+          rate: '40mb'
+      device_write_bps:
+        - path: /dev/loop50
+          rate: '20mb'
+    networks:
+      zoo3-lan:
+networks:
+  zoo3-lan:
+    external: true

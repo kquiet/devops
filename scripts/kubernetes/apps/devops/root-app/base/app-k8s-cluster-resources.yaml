@@ -1,0 +1,51 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: k8s-cluster-resources
+spec:
+  project: need-to-override
+  source:
+    repoURL: need-to-override
+    path: scripts/kubernetes/apps/devops/k8s-cluster-resources/overlays/dev
+    targetRevision: HEAD
+  destination:
+    server: need-to-override
+  syncPolicy:
+    automated:
+      enabled: true
+    syncOptions:
+      - ApplyOutOfSyncOnly=true
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
+  ignoreDifferences:
+    - group: 'discovery.k8s.io'
+      kind: EndpointSlice
+      name: external-gitlab
+      jsonPointers:
+        - /endpoints/0/conditions
+    - group: 'discovery.k8s.io'
+      kind: EndpointSlice
+      name: external-nexus-repository
+      jsonPointers:
+        - /endpoints/0/conditions
+    - group: 'discovery.k8s.io'
+      kind: EndpointSlice
+      name: external-nexus-repository-docker-group
+      jsonPointers:
+        - /endpoints/0/conditions
+    - group: 'discovery.k8s.io'
+      kind: EndpointSlice
+      name: external-nexus-repository-docker-internal
+      jsonPointers:
+        - /endpoints/0/conditions
+    - group: 'discovery.k8s.io'
+      kind: EndpointSlice
+      name: external-plantuml
+      jsonPointers:
+        - /endpoints/0/conditions
+    - group: 'discovery.k8s.io'
+      kind: EndpointSlice
+      name: external-gitlab-pages
+      jsonPointers:
+        - /endpoints/0/conditions

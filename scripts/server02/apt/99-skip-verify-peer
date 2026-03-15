@@ -1,0 +1,7 @@
+# Use this setting to bypass the certificate verification when accessing https sites
+#
+# When accessing below urls, user authentication is required. so need to use https instead
+# http://tw.archive.ubuntu.com
+# http://security.ubuntu.com
+
+Acquire::https::Verify-Peer "false";

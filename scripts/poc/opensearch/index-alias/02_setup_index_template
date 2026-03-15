@@ -1,0 +1,12 @@
+curl -X POST "http://127.0.0.1:9200/_index_template/doc-index-template" -H "Content-Type: application/json" -d'
+{
+  "index_patterns": [
+    "doc-index-*"
+  ],
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0
+    }
+  }
+}'

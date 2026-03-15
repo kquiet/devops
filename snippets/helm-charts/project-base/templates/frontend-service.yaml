@@ -1,0 +1,21 @@
+{{- if .Values.service.frontend.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.namePrefix }}-{{ .Values.service.frontend.nameSuffix }}
+  namespace: {{ .Values.namespace }}
+spec:
+  externalTrafficPolicy: {{ .Values.service.frontend.externalTrafficPolicy }}
+  ports:
+  - port: {{ .Values.service.frontend.port }}
+    protocol: {{ .Values.service.frontend.protocol }}
+    targetPort: {{ .Values.deployment.frontend.port }}
+    {{- if and (eq "nodeport" (.Values.service.frontend.type | lower)) .Values.service.frontend.nodePort }}
+    nodePort: {{ .Values.service.frontend.nodePort }}
+    {{- end }}
+  selector:
+    workload: {{ .Values.namePrefix }}-{{ .Values.deployment.frontend.nameSuffix }}
+    component: frontend
+  sessionAffinity: {{ .Values.service.frontend.sessionAffinity }}
+  type: {{ .Values.service.frontend.type }}
+{{- end }}

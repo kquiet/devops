@@ -1,0 +1,263 @@
+{{- if .Values.deployment.backend.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: {{ .Values.namePrefix }}-{{ .Values.deployment.backend.nameSuffix }}
+  labels:
+    component: backend
+    {{- toYaml .Values.deployment.labels | nindent 4 }}
+spec:
+  progressDeadlineSeconds: {{ .Values.deployment.backend.progressDeadlineSeconds }}
+  replicas: {{ .Values.deployment.backend.replicaCount }}
+  selector:
+    matchLabels:
+      workload: {{ .Values.namePrefix }}-{{ .Values.deployment.backend.nameSuffix }}
+      component: backend
+  strategy:
+    {{- toYaml .Values.deployment.backend.strategy | nindent 4 }}
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/scheme: "http"
+        prometheus.io/port: "{{ .Values.deployment.backend.port }}"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port-sidecar: "8888"
+        prometheus.io/path-sidecar: "/metrics"
+      labels:
+        workload: {{ .Values.namePrefix }}-{{ .Values.deployment.backend.nameSuffix }}
+        component: backend
+    spec:
+      containers:
+      - image: {{ .Values.image.repository }}/{{ .Values.namespace }}/{{ .Values.image.backend.name }}:{{ .Values.image.backend.tag}}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        name: {{ .Values.deployment.backend.nameSuffix }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.deployment.backend.port }}
+          protocol: {{ .Values.deployment.backend.protocol }}
+        env:
+        {{- with .Values.deployment.backend.env }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        - name: DATABASE_URL
+          value: "mysql+aiomysql://$(DATABASE_ACCOUNT):$(DATABASE_PASSWORD)@{{ .Values.namePrefix }}-{{ .Values.service.externalMysql.nameSuffix }}:3306/poc"
+        - name: APP_PORT
+          value: "{{ .Values.deployment.backend.port }}"
+        - name: OTEL_EXPORTER_OTLP_INSECURE
+          value: "true"
+        - name: OTEL_TRACES_EXPORTER
+          value: "otlp"
+        - name: OTEL_METRICS_EXPORTER
+          value: "none"
+        - name: OTEL_PYTHON_LOG_CORRELATION
+          value: "true"
+        - name: OTEL_PYTHON_LOG_LEVEL
+          value: "info"
+        - name: MY_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: MY_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: MY_NODE_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: MY_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: OTEL_RESOURCE_ATTRIBUTES
+          value: "component=backend,service.name=poc-backend,namespace=$(MY_NAMESPACE),pod.name=$(MY_POD_NAME),pod.ip=$(MY_POD_IP),node.name=$(MY_NODE_NAME),node.ip=$(MY_NODE_IP)"
+        volumeMounts:
+        - name: logs-volume
+          mountPath: /app/logs
+        resources:
+          {{- toYaml .Values.deployment.backend.resources | nindent 10 }}
+      - image: {{ .Values.image.repository }}/{{ .Values.namespace }}/{{ .Values.image.otelCollector.name }}:{{ .Values.image.otelCollector.tag}}
+        args:
+        - "--config=/conf/otel-collector-config.yaml"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        name: {{ .Values.deployment.backend.nameSuffix }}-otel-collector
+        ports:
+        - name: otlp-grpc
+          containerPort: 4317
+          protocol: TCP
+        - name: otlp-http
+          containerPort: 4318
+          protocol: TCP
+        - name: otel-metrics
+          containerPort: 8888
+          protocol: TCP
+        env:
+        {{- with .Values.deployment.backend.otelCollector.env }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        - name: MY_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: MY_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: MY_NODE_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: MY_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        volumeMounts:
+        - name: {{ .Values.namePrefix }}-{{ .Values.deployment.backend.nameSuffix }}-otel-collector-config-vol
+          mountPath: /conf
+        - name: logs-volume
+          mountPath: /logs
+        resources:
+          {{- toYaml .Values.deployment.backend.otelCollector.resources | nindent 10 }}
+      volumes:
+        - name: {{ .Values.namePrefix }}-{{ .Values.deployment.backend.nameSuffix }}-otel-collector-config-vol
+          configMap:
+            name: {{ .Values.namePrefix }}-{{ .Values.deployment.backend.nameSuffix }}-otel-collector-config
+            items:
+              - key: otel-collector-config
+                path: otel-collector-config.yaml
+        - name: logs-volume
+          emptyDir: {}
+      dnsPolicy: {{ .Values.dnsPolicy }}
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 6 }}
+      {{- end }}
+      restartPolicy: {{ .Values.deployment.backend.restartPolicy }}
+      terminationGracePeriodSeconds: {{ .Values.deployment.backend.terminationGracePeriodSeconds }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: {{ .Values.namePrefix }}-{{ .Values.deployment.backend.nameSuffix }}-otel-collector-config
+data:
+  otel-collector-config: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: "0.0.0.0:4317"
+          http:
+            endpoint: "0.0.0.0:4318"
+      filelog:
+        max_log_size: 3MiB
+        include:
+        - /logs/app.log
+        - /logs/app.log.*
+        include_file_name: false
+        include_file_path: true
+        multiline:
+          line_start_pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z'
+        operators:
+        - id: parse-all-attributes
+          type: regex_parser
+          regex: '^(?P<asctime>[^ ]+) (?P<levelname>[^ ]+) \[(?P<logger>[^\]]+)\] \[(?P<filename>[^:]+):(?P<lineno>[^\]]+)\] \[trace_id=(?P<traceid>[^ ]+) span_id=(?P<spanid>[^ ]+) trace_sampled=(?P<trace_sampled>[^\]]+)\] - (?P<message>(?s).+)$'
+          timestamp:
+            parse_from: attributes.asctime
+            layout_type: strptime
+            layout: '%Y-%m-%dT%H:%M:%S.%fZ'
+          severity:
+            parse_from: attributes.levelname
+        - id: extract-trace
+          type: trace_parser
+          trace_id:
+            parse_from: attributes.traceid
+          span_id:
+            parse_from: attributes.spanid
+        - id: remove-asctime
+          type: remove
+          field: attributes.asctime
+        - id: remove-levelname
+          type: remove
+          field: attributes.levelname
+        - id: remove-traceid
+          type: remove
+          field: attributes.traceid
+        - id: remove-spanid
+          type: remove
+          field: attributes.spanid
+
+    processors:
+      memory_limiter:
+        check_interval: 1s
+        limit_percentage: 80
+        spike_limit_percentage: 25
+      batch:
+        timeout: 200ms
+      attributes/log:
+        actions:
+          - action: insert
+            key: component
+            value: backend
+          - action: insert
+            key: service_name
+            value: poc-backend
+          - action: insert
+            key: node_name
+            value: ${MY_NODE_NAME}
+          - action: insert
+            key: node_ip
+            value: ${MY_NODE_IP}
+          - action: insert
+            key: pod_name
+            value: ${MY_POD_NAME}
+          - action: insert
+            key: pod_ip
+            value: ${MY_POD_IP}
+          - action: insert
+            key: namespace
+            value: ${MY_NAMESPACE}
+          - action: insert
+            key: loki.attribute.labels
+            value: logger, service_name, node_name, node_ip, pod_name, pod_ip, namespace, component
+          - action: insert
+            key: loki.format
+            value: raw
+
+    exporters:
+      otlp/trace:
+        endpoint: {{ .Values.namePrefix }}-{{ .Values.service.externalTrace.nameSuffix }}:4317
+        tls:
+          insecure: true
+        headers:
+          x-scope-orgid: ${MY_NAMESPACE}
+        retry_on_failure:
+          enabled: true
+      loki:
+        endpoint: http://{{ .Values.namePrefix }}-{{ .Values.service.externalLog.nameSuffix }}:3100/loki/api/v1/push
+        headers:
+          "X-Scope-OrgID": ${MY_NAMESPACE}
+        default_labels_enabled:
+          exporter: false
+
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [otlp/trace]
+        logs:
+          receivers: [filelog]
+          processors: [memory_limiter, attributes/log, batch]
+          exporters: [loki]
+{{- end }}

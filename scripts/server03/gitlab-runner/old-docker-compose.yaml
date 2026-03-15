@@ -1,0 +1,61 @@
+services:
+  old-gitlab-runner-01:
+    image: docker-group.repo.svc.internal/gitlab/gitlab-runner:alpine3.21-v18.2.1
+    container_name: old-gitlab-runner-01
+    restart: always
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./old-gitlab-runner-01:/etc/gitlab-runner
+    networks:
+      - devops-lan
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 4gb
+        reservations:
+          cpus: '0.01'
+          memory: 100mb
+  old-gitlab-runner-zoo-01:
+    image: docker-group.repo.svc.internal/gitlab/gitlab-runner:alpine3.21-v18.2.1
+    container_name: old-gitlab-runner-zoo-01
+    restart: always
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./old-gitlab-runner-zoo-01:/etc/gitlab-runner
+    networks:
+      - devops-lan
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 4gb
+        reservations:
+          cpus: '0.01'
+          memory: 100mb
+  old-gitlab-runner-all-01:
+    image: docker-group.repo.svc.internal/gitlab/gitlab-runner:alpine3.21-v18.2.1
+    container_name: old-gitlab-runner-all-01
+    restart: always
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./old-gitlab-runner-all-01:/etc/gitlab-runner
+    networks:
+      - devops-lan
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 4gb
+        reservations:
+          cpus: '0.01'
+          memory: 100mb
+networks:
+  devops-lan:
+    external: true
